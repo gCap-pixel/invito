@@ -11,13 +11,13 @@ public class Gara {
         Auto a = new Auto("Mancino");
         Auto a1 = new Auto("Batocchi");
         Auto a2 = new Auto("Giappichini");
-        Auto chiuchetti = new Auto("Chiuchetti");
+        Auto ciuchetti = new Auto("Ciuchetti");
 
         ArrayList<Auto> macchine = new ArrayList<Auto>();
         macchine.add(a1);
         macchine.add(a2);
         macchine.add(a);
-        macchine.add(chiuchetti);
+        macchine.add(ciuchetti);
 
         Gestione gara = new Gestione(macchine, 700);
         gara.start();
