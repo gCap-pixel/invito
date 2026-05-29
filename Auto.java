@@ -5,7 +5,7 @@ public class Auto extends Thread {
     private int metriPercorsi = 0;
     private Random random = new Random();
     private boolean inGara = true;
-    private Gestione g;
+    private boolean incidenteSegnalato = false;
 
     public Auto(String colore) {
         this.colore = colore;
@@ -23,33 +23,43 @@ public class Auto extends Thread {
         metriPercorsi += passo;
     }
 
-    public void terminaGara() {
+    public synchronized boolean isInGara() {
+        return inGara;
+    }
+
+    public synchronized void terminaGara() {
         inGara = false;
+    }
+
+    public synchronized boolean isIncidenteDaSegnalare() {
+        if (!inGara && !incidenteSegnalato) {
+            incidenteSegnalato = true;
+            return true;
+        }
+        return false;
     }
 
     @Override
     public void run() {
-        while (inGara != false) {
+        while (inGara) {
             try {
-                Thread.sleep(1000); // ogni secondo
+                Thread.sleep(1000);
             } catch (InterruptedException e) {
-                System.out.println("Errore nel thread della macchina " + colore);
+                return;
             }
 
-            int passo = random.nextInt(99) + 1; // passo casuale
-            aggiungiMetri(passo);
-
-            if (passo == 43 || getMetriPercorsi()==79 || passo == 2 || passo == 19 || passo == 27){
-                try {
-                    throw new RuntimeException();
+            synchronized (this) {
+                if (!inGara) {
+                    return;
                 }
-                catch (RuntimeException e) {
-                    System.err.println("la macchina " + colore + " ha fatto un incidente");
+
+                int passo = random.nextInt(99) + 1;
+                aggiungiMetri(passo);
+
+                if (passo == 43 || getMetriPercorsi() == 79 || passo == 2 || passo == 19 || passo == 27) {
                     inGara = false;
                 }
             }
-
-            System.out.println("la macchina " + colore + " ha percorso " + getMetriPercorsi() + " metri.");
-            }
         }
     }
+}

@@ -4,16 +4,13 @@ public class Gestione extends Thread {
     private ArrayList<Auto> macchine;
     private int distanzaVittoria;
     private boolean garaInCorso = true;
-    
-    // AGGIUNTA: Variabile per salvare il colore di chi vince
-    private String coloreVincitore = ""; 
+    private String coloreVincitore = "";
 
     public Gestione(ArrayList<Auto> macchine, int distanzaVittoria) {
         this.macchine = macchine;
         this.distanzaVittoria = distanzaVittoria;
     }
 
-    // AGGIUNTA: Metodo getter per permettere al Main di sapere chi ha vinto
     public String getColoreVincitore() {
         return coloreVincitore;
     }
@@ -21,38 +18,56 @@ public class Gestione extends Thread {
     @Override
     public void run() {
         System.out.println("--- LA GARA HA INIZIO! TRAGUARDO A " + distanzaVittoria + " METRI ---");
-        
+
         for (Auto auto : macchine) {
             auto.start();
         }
 
+        try {
+            Thread.sleep(1005);
+        } catch (InterruptedException e) {
+            return;
+        }
+
         while (garaInCorso) {
-            try {
-                Thread.sleep(500); 
-            } catch (InterruptedException e) {
-                System.out.println("Errore nella gestione della gara.");
-            }
-
             int autoAttive = 0;
+            boolean qualcunoHaVinto = false;
 
+            // Cicla direttamente sull'ArrayList dinamico passato dal Main
             for (Auto auto : macchine) {
-                if (auto.isAlive()) {
+                if (auto.isInGara()) {
                     autoAttive++;
-                    
-                    if (auto.getMetriPercorsi() >= distanzaVittoria) {
-                        // AGGIUNTA: Registriamo il vincitore prima di chiudere la gara
-                        coloreVincitore = auto.getColore(); 
-                        System.out.println("\n*** HA VINTO LA MACCHINA " + coloreVincitore.toUpperCase() + "! ***");
-                        terminaTuttiIThread();
-                        break;
+                    System.out.println("la macchina " + auto.getColore() + " ha percorso " + auto.getMetriPercorsi() + " metri.");
+
+                    if (auto.getMetriPercorsi() >= distanzaVittoria && !qualcunoHaVinto) {
+                        coloreVincitore = auto.getColore();
+                        qualcunoHaVinto = true;
                     }
+                } else if (auto.isIncidenteDaSegnalare()) {
+                    System.err.println("la macchina " + auto.getColore() + " ha fatto un incidente");
+                } else if (auto.isAlive()) {
+                    autoAttive++;
                 }
             }
 
+            System.out.println();
+
+            if (qualcunoHaVinto) {
+                System.out.println("*** HA VINTO LA MACCHINA " + coloreVincitore.toUpperCase() + "! ***");
+                terminaTuttiIThread();
+                break;
+            }
+
             if (autoAttive == 0 && garaInCorso) {
-                System.out.println("\n--- GARA TERMINATA: Tutte le macchine si sono scontrate! ---");
+                System.out.println("--- GARA TERMINATA: Tutte le macchine si sono scontrate! ---");
                 coloreVincitore = "Nessuno";
                 garaInCorso = false;
+            }
+
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                return;
             }
         }
     }
@@ -61,7 +76,7 @@ public class Gestione extends Thread {
         garaInCorso = false;
         for (Auto auto : macchine) {
             auto.terminaGara();
-            auto.interrupt(); 
+            auto.interrupt();
         }
     }
 }
